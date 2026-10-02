@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>係船装置・アンカー計算ツール</title>
+<style>
+:root{
+  --bg1:#0b1624; --bg2:#152538;
+  --card:#132339cc; --cardborder:#2a4360;
+  --accent:#3ec6e0; --accent2:#4f8ff7;
+  --text:#eef4fb; --textdim:#a9c0d6;
+  --danger:#ff6b6b; --ok:#3ecf8e;
+  --input:#0d1c2c;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:linear-gradient(160deg,var(--bg1),var(--bg2) 60%,#0d1a2a);
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:'Share Tech Mono','Courier New',monospace;
+  min-height:100vh;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+  background-size:28px 28px,28px 28px;
+}
+.wrap{max-width:560px;margin:0 auto;padding:22px 14px 80px;}
+.hero{text-align:center;margin:6px 0 24px;}
+.hero h1{font-size:18px;line-height:1.5;margin:0 0 6px;color:#fff;font-weight:700;letter-spacing:.02em;}
+.hero p{font-size:11.5px;color:var(--textdim);margin:4px 0;line-height:1.7;}
+.step{
+  background:var(--card);
+  border:1px solid var(--cardborder);
+  border-radius:10px;
+  padding:18px 16px;
+  margin-bottom:18px;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.01), 0 8px 24px rgba(0,0,0,0.35);
+}
+.step-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+.step-num{
+  font-size:11px;color:var(--bg1);background:var(--accent);
+  border-radius:20px;padding:2px 9px;font-weight:700;
+}
+.step-title{font-size:14px;color:#fff;font-weight:700;}
+.step-sub{font-size:11px;color:var(--textdim);margin:0 0 14px;line-height:1.6;}
+.field{margin-bottom:4px;}
+.field label{display:block;font-size:11.5px;color:var(--textdim);margin-bottom:5px;}
+input[type=number]{
+  width:100%;background:var(--input);border:1px solid var(--cardborder);
+  color:#fff;padding:10px 10px;border-radius:6px;font-size:15px;
+  font-family:inherit;
+}
+input:focus{outline:none;border-color:var(--accent);}
+::placeholder{color:#5f7794;}
+.rangeNote{font-size:10.5px;color:#5f7794;margin-top:6px;}
+.warn{font-size:11px;color:#f5c26b;background:rgba(245,194,107,0.08);border:1px solid rgba(245,194,107,0.3);padding:8px 10px;border-radius:6px;margin-top:12px;line-height:1.6;}
+.resultWrap{display:none;}
+.resultWrap.show{display:block;}
+.subhead{font-size:12px;color:var(--accent);font-weight:700;margin:18px 0 10px;display:flex;align-items:center;gap:8px;}
+.subhead:first-of-type{margin-top:16px;}
+.matBox{
+  border:1px solid var(--cardborder);border-radius:8px;background:var(--input);
+  padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
+}
+.matBox .icon{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.matBox .info{flex:1;min-width:0;}
+.matBox .matName{font-size:12px;color:var(--text);}
+.matBox .matVal{font-size:17px;font-weight:700;color:var(--accent);}
+.matBox .matVal .unit{font-size:10.5px;color:var(--textdim);font-weight:400;margin-left:2px;}
+.commonRow{
+  display:flex;justify-content:space-between;align-items:baseline;
+  border:1px solid var(--cardborder);border-radius:8px;background:rgba(62,198,224,0.05);
+  padding:9px 12px;margin-bottom:8px;
+}
+.commonRow .lbl{font-size:11.5px;color:var(--textdim);}
+.commonRow .val{font-size:15px;font-weight:700;color:#fff;}
+.commonRow .val .unit{font-size:10.5px;color:var(--textdim);font-weight:400;margin-left:2px;}
+.footer-note{font-size:10.5px;color:#5f7794;text-align:center;margin-top:18px;line-height:1.8;}
+.photoGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:420px){.photoGrid{grid-template-columns:1fr;}}
+.photoCard{border:1px solid var(--cardborder);border-radius:10px;overflow:hidden;background:var(--input);}
+.photoCard img{width:100%;height:140px;object-fit:cover;display:block;background:#06101c;}
+.photoCard .cap{padding:9px 10px;}
+.photoCard .cap .ptitle{font-size:12px;font-weight:700;color:#fff;}
+.photoCard .cap .pnote{font-size:10px;color:var(--textdim);margin-top:3px;line-height:1.5;}
+.photoCard .cap .psrc{font-size:9.5px;color:#5f7794;margin-top:4px;}
+.photoCard .cap .psrc a{color:#5f7794;}
+.refBadge{font-size:9px;color:#f5c26b;border:1px solid rgba(245,194,107,0.4);border-radius:10px;padding:1px 7px;margin-left:6px;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>係船装置・アンカー計算ツール</h1>
+    <p>船舶の登録長（Lr）を入力すると、係船索・アンカー（錨）・アンカーロープ（錨索）の標準仕様を自動算定します。</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">入力</span><span class="step-title">登録長（Lr）</span></div>
+    <div class="field">
+      <label>登録長 Lr（m）</label>
+      <input type="number" id="lrInput" step="0.01" min="0" placeholder="例）9.5">
+    </div>
+    <div class="rangeNote">適用範囲：24m未満（24m以上は原本をご確認ください）</div>
+  </div>
+
+  <div class="step resultWrap" id="resultStep">
+    <div class="step-head"><span class="step-num">結果</span><span class="step-title">標準仕様</span></div>
+    <div class="step-sub" id="rangeLabel"></div>
+
+    <div class="subhead">⚓ 係船装置及び係船索（第44条）</div>
+    <div id="mooringLines"></div>
+    <div class="commonRow"><span class="lbl">索の長さ</span><span class="val" id="mooringLength"></span></div>
+    <div class="commonRow"><span class="lbl">数量</span><span class="val" id="mooringQty"></span></div>
+
+    <div class="subhead">⚓ アンカー（第45条）</div>
+    <div id="anchors"></div>
+
+    <div class="subhead">⚓ アンカーロープ（錨索）</div>
+    <div id="anchorRopes"></div>
+    <div class="commonRow"><span class="lbl">索（チェーン）の長さ</span><span class="val" id="anchorLength"></span></div>
+  </div>
+
+  <div class="step resultWrap" id="warnStep">
+    <div class="warn">入力された登録長に対応する表のデータがありません（24m以上、または負の値は対象外です。原本をご確認ください）。</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">参考</span><span class="step-title">アンカーの実物写真（教育用）</span></div>
+    <div class="step-sub">種類ごとの実際の形状を確認できます。</div>
+    <div class="photoGrid">
+      <div class="photoCard">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Danforth_anchor.jpg?width=400" alt="ダンホースアンカー" loading="lazy" onerror="this.closest('.photoCard').style.display='none'">
+        <div class="cap"><div class="ptitle">ダンホースアンカー</div><div class="pnote">フラット型の2枚羽根が特徴</div><div class="psrc">出典：<a href="https://commons.wikimedia.org/wiki/File:Danforth_anchor.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></div></div>
+      </div>
+      <div class="photoCard">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/CQR_Anchor.jpg?width=400" alt="CQRアンカー" loading="lazy" onerror="this.closest('.photoCard').style.display='none'">
+        <div class="cap"><div class="ptitle">CQRアンカー（プラウ型）</div><div class="pnote">農具の鋤（プラウ）に似た可動式の刃</div><div class="psrc">出典：<a href="https://commons.wikimedia.org/wiki/File:CQR_Anchor.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></div></div>
+      </div>
+      <div class="photoCard">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Genuine_Bruce_anchor.jpg?width=400" alt="ブルースアンカー" loading="lazy" onerror="this.closest('.photoCard').style.display='none'">
+        <div class="cap"><div class="ptitle">ブルース（クロー型）アンカー</div><div class="pnote">爪状の一体成型。CQRと同じ表の区分を使用</div><div class="psrc">出典：<a href="https://commons.wikimedia.org/wiki/File:Genuine_Bruce_anchor.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></div></div>
+      </div>
+      <div class="photoCard">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Draggen.jpg?width=400" alt="日本型錨（参考：折りたたみ式四爪アンカー）" loading="lazy" onerror="this.closest('.photoCard').style.display='none'">
+        <div class="cap"><div class="ptitle">日本型錨（四爪アンカー）<span class="refBadge">参考画像</span></div><div class="pnote">4本の爪を持つ日本独自の形式。写真は形状が近い折りたたみ式アンカー</div><div class="psrc">出典：<a href="https://commons.wikimedia.org/wiki/File:Draggen.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    出典：小型船舶安全規則 検査事務規程 1編5章　第44条・第45条　表44.0&lt;1&gt;・表45.0&lt;1&gt;<br>
+    アンカーの絵は種類を区別するための簡略図です。実形状は各メーカー仕様をご確認ください。<br>
+    本ツールは参考情報です。最終確認は必ず原本・関係機関にお問い合わせください。
+  </div>
+</div>
+
+<script>
+/* ====================== データ ====================== */
+/* [下限, 上限(exclusive), ...] 範囲は m 単位 */
+
+/* 表44.0<1> 係船索：[lo, hi, マニラ麻径, ナイロン/ポリエステル径, ビニロン/ポリエチレン径, 索の長さ, 数量] */
+const MOORING_LINE_TABLE = [
+  [0,  3,  9,  6,  7,  4.5, 2],
+  [3,  4,  10, 7,  8,  6.0, 2],
+  [4,  6,  11, 8,  9,  9.0, 2],
+  [6,  8,  13, 9,  11, 12.0, 2],
+  [8,  10, 16, 11, 13, 15.0, 2],
+  [10, 12, 18, 13, 15, 18.0, 2],
+  [12, 14, 20, 14, 17, 21.0, 2],
+  [14, 16, 22, 15, 18, 24.0, 2],
+  [16, 18, 24, 17, 20, 27.0, 2],
+  [18, 20, 26, 18, 21, 30.0, 2],
+  [20, 22, 30, 21, 25, 35.0, 2],
+  [22, 24, 34, 24, 28, 40.0, 2]
+];
+
+/* 表45.0<1> アンカー・アンカー索：
+   [lo, hi, ダンホース質量, CQR/ブルース質量, 日本型質量,
+    マニラ麻径, ナイロン/ポリエステル径, ビニロン/ポリエチレン径, チェーン径(nullは規定なし), 長さ] */
+const ANCHOR_TABLE = [
+  [0,  3,  2.5,  3.5,  6.0,  9,  6,  7,  null, 30],
+  [3,  4,  3.0,  4.0,  8.0,  10, 7,  8,  null, 30],
+  [4,  6,  3.5,  5.5,  11.5, 11, 8,  9,  null, 40],
+  [6,  8,  5.5,  8.5,  17.0, 13, 9,  11, null, 40],
+  [8,  10, 8.0,  11.5, 22.0, 16, 11, 13, null, 40],
+  [10, 12, 10.0, 14.5, 27.0, 18, 13, 15, null, 50],
+  [12, 14, 12.5, 17.5, 32.0, 20, 14, 17, 12,   50],
+  [14, 16, 15.5, 21.5, 38.0, 22, 15, 18, 13,   50],
+  [16, 18, 18.5, 25.0, 44.0, 24, 17, 20, 14,   60],
+  [18, 20, 21.5, 29.0, 51.0, 26, 18, 21, 16,   70],
+  [20, 22, 25.0, 34.5, 60.0, 30, 21, 25, 17,   80],
+  [22, 24, 32.0, 41.5, 70.0, 34, 24, 28, 19,   90]
+];
+
+function lookupRange(table, v) {
+  for (const row of table) {
+    if (v >= row[0] && v < row[1]) return row;
+  }
+  return null;
+}
+
+/* ====================== アンカー簡略アイコン ====================== */
+const ICON_DANFORTH = `<svg viewBox="0 0 34 34" width="30" height="30"><g fill="none" stroke="#3ec6e0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="17" y1="3" x2="17" y2="16"/>
+  <rect x="12" y="3" width="10" height="2.2" rx="1"/>
+  <path d="M17 16 L7 27 L10 29 L17 20 Z"/>
+  <path d="M17 16 L27 27 L24 29 L17 20 Z"/>
+</g></svg>`;
+const ICON_PLOW = `<svg viewBox="0 0 34 34" width="30" height="30"><g fill="none" stroke="#3ec6e0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="17" y1="3" x2="17" y2="14"/>
+  <path d="M17 14 C10 16, 8 22, 12 29 C16 24, 14 19, 22 19 C26 19, 27 24, 24 29 C29 23, 27 16, 17 14 Z"/>
+</g></svg>`;
+const ICON_JPANCHOR = `<svg viewBox="0 0 34 34" width="30" height="30"><g fill="none" stroke="#3ec6e0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="17" y1="3" x2="17" y2="13"/>
+  <rect x="12" y="3" width="10" height="2.2" rx="1"/>
+  <line x1="17" y1="13" x2="17" y2="19"/>
+  <path d="M17 19 L8 23 L9 27 L17 24 Z"/>
+  <path d="M17 19 L26 23 L25 27 L17 24 Z"/>
+  <path d="M17 19 L10 17 L12 14 L17 16 Z"/>
+  <path d="M17 19 L24 17 L22 14 L17 16 Z"/>
+</g></svg>`;
+const ICON_ROPE = `<svg viewBox="0 0 34 34" width="26" height="26"><g fill="none" stroke="#3ec6e0" stroke-width="1.6" stroke-linecap="round">
+  <path d="M5 17 Q11 9, 17 17 T29 17" stroke-dasharray="0.1 5"/>
+  <path d="M5 17 Q11 25, 17 17 T29 17"/>
+</g></svg>`;
+const ICON_CHAIN = `<svg viewBox="0 0 34 34" width="26" height="26"><g fill="none" stroke="#3ec6e0" stroke-width="1.6">
+  <ellipse cx="11" cy="13" rx="5" ry="3.2" transform="rotate(-30 11 13)"/>
+  <ellipse cx="20" cy="18" rx="5" ry="3.2" transform="rotate(-30 20 18)"/>
+  <ellipse cx="14" cy="24" rx="5" ry="3.2" transform="rotate(-30 14 24)"/>
+</g></svg>`;
+
+/* ====================== 計算・描画 ====================== */
+function calc() {
+  const lr = parseFloat(document.getElementById('lrInput').value);
+  const resultStep = document.getElementById('resultStep');
+  const warnStep = document.getElementById('warnStep');
+
+  if (isNaN(lr) || lr < 0) {
+    resultStep.classList.remove('show');
+    warnStep.classList.remove('show');
+    return;
+  }
+
+  const mRow = lookupRange(MOORING_LINE_TABLE, lr);
+  const aRow = lookupRange(ANCHOR_TABLE, lr);
+
+  if (!mRow || !aRow) {
+    resultStep.classList.remove('show');
+    warnStep.classList.add('show');
+    return;
+  }
+  warnStep.classList.remove('show');
+  resultStep.classList.add('show');
+
+  document.getElementById('rangeLabel').textContent =
+    `登録長 ${mRow[0]}m以上 ${mRow[1]}m未満 の区分に該当します`;
+
+  /* 係船索 */
+  const [, , maniraD, nylonD, vinylonD, mLen, mQty] = mRow;
+  document.getElementById('mooringLines').innerHTML = [
+    ['マニラ麻索', maniraD],
+    ['ナイロン索・ポリエステル索', nylonD],
+    ['ビニロン索・ポリエチレン索', vinylonD]
+  ].map(([name, d]) => `
+    <div class="matBox">
+      <div class="icon">${ICON_ROPE}</div>
+      <div class="info"><div class="matName">${name}</div><div class="matVal">${d}<span class="unit">mm</span></div></div>
+    </div>
+  `).join('');
+  document.getElementById('mooringLength').innerHTML = `${mLen.toFixed(1)}<span class="unit">m</span>`;
+  document.getElementById('mooringQty').innerHTML = `${mQty}<span class="unit">本</span>`;
+
+  /* アンカー */
+  const [, , danforth, cqr, jpAnchor, aManira, aNylon, aVinylon, chainD, aLen] = aRow;
+  document.getElementById('anchors').innerHTML = [
+    ['ダンホースアンカー', danforth, ICON_DANFORTH],
+    ['CQR又はブルースアンカー', cqr, ICON_PLOW],
+    ['日本型錨', jpAnchor, ICON_JPANCHOR]
+  ].map(([name, w, icon]) => `
+    <div class="matBox">
+      <div class="icon">${icon}</div>
+      <div class="info"><div class="matName">${name}</div><div class="matVal">${w.toFixed(1)}<span class="unit">kg</span></div></div>
+    </div>
+  `).join('');
+
+  /* アンカー索 */
+  const ropeRows = [
+    ['マニラ麻索', aManira],
+    ['ナイロン索・ポリエステル索', aNylon],
+    ['ビニロン索・ポリエチレン索', aVinylon],
+    ['チェーンの場合', chainD]
+  ];
+  document.getElementById('anchorRopes').innerHTML = ropeRows.map(([name, d]) => `
+    <div class="matBox">
+      <div class="icon">${name === 'チェーンの場合' ? ICON_CHAIN : ICON_ROPE}</div>
+      <div class="info"><div class="matName">${name}</div><div class="matVal">${d === null ? '規定なし' : d + 'mm'}</div></div>
+    </div>
+  `).join('');
+  document.getElementById('anchorLength').innerHTML = `${aLen.toFixed(1)}<span class="unit">m</span>`;
+}
+
+document.getElementById('lrInput').addEventListener('input', calc);
+</script>
+</body>
+</html>
