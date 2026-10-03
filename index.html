@@ -82,7 +82,11 @@ input:focus{outline:none;border-color:var(--accent);}
 .photoGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media (max-width:420px){.photoGrid{grid-template-columns:1fr;}}
 .photoCard{border:1px solid var(--cardborder);border-radius:10px;overflow:hidden;background:var(--input);}
-.photoCard img{width:100%;height:140px;object-fit:cover;display:block;background:#06101c;}
+
+  
+/*.photoCard img{width:100%;height:140px;object-fit:cover;display:block;background:#06101c;}*/
+.photoCard img{width:100%;height:140px;object-fit:contain;object-position:center;display:block;background:#06101c;}
+  
 .photoCard .cap{padding:9px 10px;}
 .photoCard .cap .ptitle{font-size:12px;font-weight:700;color:#fff;}
 .photoCard .cap .pnote{font-size:10px;color:var(--textdim);margin-top:3px;line-height:1.5;}
