@@ -66,9 +66,12 @@ input:focus{outline:none;border-color:var(--accent);}
   padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
 }
 .matBox .icon{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.matBox .info{flex:1;min-width:0;}
-.matBox .matName{font-size:12px;color:var(--text);}
-.matBox .matVal{font-size:17px;font-weight:700;color:var(--accent);}
+
+
+.matBox .info{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.matBox .matName{font-size:12px;color:var(--text);flex:1;min-width:0;}
+.matBox .matVal{font-size:17px;font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;}
+  
 .matBox .matVal .unit{font-size:10.5px;color:var(--textdim);font-weight:400;margin-left:2px;}
 .commonRow{
   display:flex;justify-content:space-between;align-items:baseline;
